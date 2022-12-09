@@ -4,13 +4,9 @@ import group15.ltm_project.Client.Client;
 import group15.ltm_project.DTO.MovieDetail;
 import group15.ltm_project.DTO.MovieResponse;
 import group15.ltm_project.DTO.MovieServices;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.logging.Level;
@@ -22,6 +18,7 @@ import java.util.logging.Logger;
  */
 public class ServerThread implements Runnable{
     private final Socket socket;
+    private String request;
     private final int clientPort;
     private static ObjectOutputStream outToClient = null;
     private static ObjectInputStream sentFromClient = null;
@@ -47,11 +44,17 @@ public class ServerThread implements Runnable{
         return clientPort;
     }
     
-    public ServerThread(Socket socket, int clientPort){
+    public ServerThread(Socket socket, int clientPort, String request){
         this.socket = socket;
+        this.request = request;
         this.clientPort = clientPort;
         System.out.println("Server thread client " + clientPort + " Started");
         isClosed = false;
+        
+    }
+    
+    public static String getRequest(String request){
+        return request;
     }
     
     @Override
@@ -60,16 +63,27 @@ public class ServerThread implements Runnable{
         
         try{
             System.out.println("Start new thread success, Port: " + clientPort);
-            String request = " ";
             while (true) {
-                ArrayList<MovieResponse> result = MovieServices.getAllMovie();
-                try {
-                    outToClient = new ObjectOutputStream(socket.getOutputStream());
-                    outToClient.writeObject(result);
-                    outToClient.reset();
-                } catch (IOException ex) {
-                    Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
-                }
+                if(request.equals("a")){
+                    ArrayList<MovieResponse> result = MovieServices.getAllMovie();
+                    try {
+                        outToClient = new ObjectOutputStream(socket.getOutputStream());
+                        outToClient.writeObject(result);
+                        outToClient.reset();
+                    } catch (IOException ex) {
+                        Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }//else if(request.equals("b")){
+//                    ArrayList<MovieDetail> result = MovieServices.getMovieDetail("14227");
+//                    try {
+//                        outToClient = new ObjectOutputStream(socket.getOutputStream());
+//                        outToClient.writeObject(result);
+//                        outToClient.reset();
+//
+//                    } catch (IOException ex) {
+//                        Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+//                    }
+//                }
             }
         } catch (IOException e) {
 //            isClosed = true;

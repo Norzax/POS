@@ -8,20 +8,28 @@ import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.Image;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStreamWriter;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import static javax.swing.JFrame.EXIT_ON_CLOSE;
 import javax.swing.JLabel;
@@ -45,7 +53,7 @@ public class Client extends JFrame{
     public Client() throws IOException{
         InetAddress ip = InetAddress.getByName(hostname);
         System.out.println(ip);
-        socket = new Socket(ip, destPort);
+        socket = new Socket("127.0.0.1", destPort);
         initComponents();
     }
     
@@ -75,7 +83,11 @@ public class Client extends JFrame{
     public static void startClient(){
         try{
             System.out.println("Client connected");
+            BufferedWriter sendServer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+            
             while(true){
+                sendServer.write("a");
+                sendServer.flush();
                 sentFromServer = new ObjectInputStream(socket.getInputStream());
                 try {
                     Object object = sentFromServer.readObject();
@@ -101,12 +113,10 @@ public class Client extends JFrame{
                         
                         String urlDetail = list.get(i).getUrlDetail();
                         String id = list.get(i).getId();
-                        while () {
                             lbimg[i].addMouseListener(new MouseAdapter() {
                                 @Override
                                 public void mouseClicked(MouseEvent e) {
                                     try {
-                                        
                                         System.out.println("OK");
                                         String request = "getDetail "+urlDetail+" "+id;
                                         requestToServer(request);
@@ -116,7 +126,6 @@ public class Client extends JFrame{
                                     }
                                 }
                             });
-                        }
                         
                         lbname[i] = new JLabel();
                         lbname[i].setText(list.get(i).getMovieName());
@@ -153,16 +162,61 @@ public class Client extends JFrame{
     
     public static void requestToServer(String request){
         try {
-            DataOutputStream sendServer = new DataOutputStream(socket.getOutputStream());
-            sendServer.writeChars(request);
-            sendServer.flush();
+            
         } catch (IOException ex) {
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+    public static void test(){
+        JButton test= new JButton("test");
+        test.setSize(50,50);
+        leftPanel.add(test);
+//        JButton test2= new JButton("test2");
+//        test.setSize(50,50);
+//        leftPanel.add(test2);
+        test.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    System.out.println("okw");
+                    requestToServer("a");
+                    sentFromServer = new ObjectInputStream(socket.getInputStream());
+                    Object object;
+                    try {
+                        object = sentFromServer.readObject();
+                        ArrayList<MovieResponse> list = (ArrayList<MovieResponse>) object;
+                        System.out.println(list.get(0).getUrlDetail());
+                    } catch (IOException | ClassNotFoundException ex) {
+                        Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                } catch (IOException ex) {
+                    Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        });
+//        test2.addActionListener(new ActionListener() {
+//            @Override
+//            public void actionPerformed(ActionEvent e) {
+//                try {
+//                    System.out.println("okw");
+//                    requestToServer("b");
+//                    sentFromServer = new ObjectInputStream(socket.getInputStream());
+//                    Object object;
+//                    try {
+//                        object = sentFromServer.readObject();
+//                        ArrayList<MovieDetail> list = (ArrayList<MovieDetail>) object;
+//                        System.out.println(list.get(0).getDescription());
+//                    } catch (IOException | ClassNotFoundException ex) {
+//                        Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+//                    }
+//                } catch (IOException ex) {
+//                    Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+//                }
+//            }
+//        });
+    }
     
     public static Object getFromServer() throws IOException, ClassNotFoundException{
-        
         Object object = sentFromServer.readObject();
         return object;
     }
@@ -170,5 +224,6 @@ public class Client extends JFrame{
     public static void main(String [] Argvs) throws IOException, ClassNotFoundException{
         Client a= new Client();
         a.startClient();
+//        a.test();
     }
 }

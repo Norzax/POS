@@ -4,12 +4,15 @@ import group15.ltm_project.Client.Client;
 import group15.ltm_project.DTO.MovieDetail;
 import group15.ltm_project.DTO.MovieServices;
 import group15.ltm_project.DTO.MovieResponse;
+import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -34,29 +37,31 @@ public class Server {
             movieServer = new ServerSocket(port);
             System.out.println("Server binding at port " + port);
             System.out.println("Waiting for client...");
+            socket = movieServer.accept();
+            BufferedReader inFromClient = new BufferedReader(new InputStreamReader(socket.getInputStream(),StandardCharsets.UTF_8));
+            
+            //DataInputStream inFromClient = new DataInputStream(socket.getInputStream());
+            String str = "b";
+            System.out.println(str);
             while(true){
-                socket = movieServer.accept();
-                ServerThread serverThread = new ServerThread(socket,socket.getPort());
+                str = inFromClient.readLine();
+                System.out.println(str);
+                ServerThread serverThread = new ServerThread(socket,socket.getPort(),str);
                 serverThreadBus.add(serverThread);
-                executor.execute(serverThread); 
-                
-                String request = getFromClient();
-                String[] request2 = request.split(" ");
-                System.out.println(request2[1]);
-                if("getDetail".equals(request2[0])){
-                    ArrayList<MovieDetail> result2 = MovieServices.getMovieDetail(request2[2]);
-                    for(int i =0 ;i<result2.size();i++){
-                        System.out.println(result2.get(i).getProductor());
-                        System.out.println(result2.get(i).getUrlTomato());
-                    }
-                    try {
-                        //outToClient = new ObjectOutputStream(socket.getOutputStream());
-                        outToClient.writeObject(result2);
-                        outToClient.reset();
-                    } catch (IOException ex) {
-                        Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
+                executor.execute(serverThread);
+//                String request = getFromClient();
+//                String[] request2 = request.split(" ");
+//                System.out.println(request2[1]);
+//                if("getDetail".equals(request2[0])){
+//                    ArrayList<MovieDetail> result2 = MovieServices.getMovieDetail("14227");
+//                    try {
+//                        outToClient = new ObjectOutputStream(socket.getOutputStream());
+//                        outToClient.writeObject(result2);
+//                        outToClient.reset();
+//                    } catch (IOException ex) {
+//                        Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+//                    }
+//                }
             }
         } catch (IOException e) {
             System.out.println(e);
@@ -79,9 +84,12 @@ public class Server {
     }
     
     public static String getFromClient() throws IOException, ClassNotFoundException{
-        DataInputStream inFromClient = new DataInputStream(socket.getInputStream());
-        String str = inFromClient.readUTF();
-        return str;
+        BufferedReader inFromClient = new BufferedReader(new InputStreamReader(socket.getInputStream(),StandardCharsets.UTF_8));
+        
+        //DataInputStream inFromClient = new DataInputStream(socket.getInputStream());
+        String str = inFromClient.readLine();
+        System.out.println(str);
+        return str; 
     }
     
     public static void main(String[] args) throws IOException, ClassNotFoundException{

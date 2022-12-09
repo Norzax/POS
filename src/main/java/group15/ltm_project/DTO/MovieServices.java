@@ -33,7 +33,7 @@ public class MovieServices {
             //lay id
             String id = elements.get(i).getElementsByClass("btn-group btn-actions").first()
                                             .getElementsByTag("a").first().attr("data-id");
-            //System.out.println(id);
+            System.out.println(id);
             //lay ngay release
             String dateRelease = elements.get(i).getElementsByClass("col text-muted").text();
             //lay hinh
